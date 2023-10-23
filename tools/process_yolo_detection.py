@@ -4,8 +4,9 @@ PATH = '/mnt/Data/dataset/ReiD/AIC23_Track1_MTMC_Tracking/outputs/Detection_YOLO
 print(os.listdir(PATH)[3])
 
 
-
+# 创建用于存储场景和摄像机相关的文件列表的字典，
 scene_cam_files = dict()
+# 遍历PATH目录下的文件，判断是否为文件而非子目录，然后将文件按照场景和摄像机的组合存储在scene_cam_files字典中
 for file in os.listdir(PATH):
     if not os.path.isfile(os.path.join(PATH, file)):
         continue
@@ -17,8 +18,13 @@ for file in os.listdir(PATH):
     scene_cam_files[scene_cam].append(file)
 
 # print(scene_cam_files)
+# 定义了图像的最大宽度和高度
 w_max = 1920
 h_max = 1080
+
+
+# 函数接受一个文件列表作为参数，然后处理每个文件中的目标检测结果
+# 将YOLO格式的坐标转换为COCO格式的坐标，并返回一个包含结果的列表
 def process_scene_cam(param):
     results = []
     for file in param:
@@ -50,6 +56,7 @@ def process_scene_cam(param):
             results.append([str(frame_id), '-1', str(x), str(y), str(w), str(h), str(prob), '-1', '-1', '-1'])
     return results
 
+# 遍历字典，对每个场景和摄像机的文件列表调用process_scene_cam函数，并将结果保存到相应的文本文件中
 for scene_cam, files in scene_cam_files.items():
     print(scene_cam)
     results = process_scene_cam(files)
