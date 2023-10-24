@@ -4,7 +4,8 @@ import cv2
 
 
 def non_max_suppression(boxes, max_bbox_overlap, scores=None):
-    """Suppress overlapping detections.
+    """用于执行非最大抑制（Non-Maximum Suppression，NMS）以抑制具有重叠边界框的检测结果
+    Suppress overlapping detections.
 
     Original code from [1]_ has been adapted to include confidence score.
 
