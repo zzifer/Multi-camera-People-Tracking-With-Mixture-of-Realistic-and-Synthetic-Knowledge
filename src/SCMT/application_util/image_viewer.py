@@ -8,7 +8,8 @@ import time
 
 
 def is_in_bounds(mat, roi):
-    """Check if ROI is fully contained in the image.
+    """检查 ROI 是否完全包含在图像中
+    Check if ROI is fully contained in the image.
 
     Parameters
     ----------
@@ -32,7 +33,8 @@ def is_in_bounds(mat, roi):
 
 
 def view_roi(mat, roi):
-    """Get sub-array.
+    """获取图像中的子区域
+    Get sub-array.
 
     The ROI must be valid, i.e., fully contained in the image.
 
@@ -59,7 +61,8 @@ def view_roi(mat, roi):
 
 
 class ImageViewer(object):
-    """An image viewer with drawing routines and video capture capabilities.
+    """具有绘图例程和视频捕获功能的图像查看器
+    An image viewer with drawing routines and video capture capabilities.
 
     Key Bindings:
 
@@ -99,6 +102,8 @@ class ImageViewer(object):
     """
 
     def __init__(self, update_ms, window_shape=(640, 480), caption="Figure 1"):
+        # 初始化图像查看器
+        # update_ms表示图像更新的时间间隔（毫秒），window_shape表示窗口的大小（宽度和高度），caption表示窗口标题。
         self._window_shape = window_shape
         self._caption = caption
         self._update_ms = update_ms
@@ -184,7 +189,8 @@ class ImageViewer(object):
                 2, self.text_color, 2)
 
     def gaussian(self, mean, covariance, label=None):
-        """Draw 95% confidence ellipse of a 2-D Gaussian distribution.
+        """用于绘制2D高斯分布的95%置信度椭圆。可以指定高斯分布的均值和协方差矩阵，以及可选的标签
+        Draw 95% confidence ellipse of a 2-D Gaussian distribution.
 
         Parameters
         ----------
@@ -211,7 +217,8 @@ class ImageViewer(object):
                         2, self.text_color, 2)
 
     def annotate(self, x, y, text):
-        """Draws a text string at a given location.
+        """用于在图像上绘制文本。可以指定文本的位置和内容
+        Draws a text string at a given location.
 
         Parameters
         ----------
@@ -257,7 +264,8 @@ class ImageViewer(object):
 
     def enable_videowriter(self, output_filename, fourcc_string="MJPG",
                            fps=None):
-        """ Write images to video file.
+        """ 用于将图像帧写入视频文件
+        Write images to video file.
 
         Parameters
         ----------
@@ -278,12 +286,14 @@ class ImageViewer(object):
             output_filename, fourcc, fps, self._window_shape)
 
     def disable_videowriter(self):
-        """ Disable writing videos.
+        """ 用于停止将图像帧写入视频文件
+        Disable writing videos.
         """
         self._video_writer = None
 
     def run(self, update_fun=None):
-        """Start the image viewer.
+        """用于启动图像查看器并开始显示图像。这个方法包含了一个主要的控制循环，其中可以执行自定义的更新函数。
+        Start the image viewer.
 
         This method blocks until the user requests to close the window.
 
@@ -333,7 +343,8 @@ class ImageViewer(object):
         cv2.imshow(self._caption, self.image)
 
     def stop(self):
-        """Stop the control loop.
+        """用于停止图像查看器的控制循环
+        Stop the control loop.
 
         After calling this method, the viewer will stop execution before the
         next frame and hand over control flow to the user.
