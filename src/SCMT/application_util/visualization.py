@@ -5,7 +5,11 @@ from .image_viewer import ImageViewer
 
 
 def create_unique_color_float(tag, hue_step=0.41):
-    """Create a unique RGB color code for a given track id (tag).
+    """
+    创建一个唯一的RGB颜色代码，用于给目标分配独特的颜色
+    颜色代码是在HSV颜色空间中生成的，沿着色相角度逐渐变化，同时逐渐改变饱和度
+    该函数返回一个RGB颜色代码，其值在范围[0, 1]之间
+    Create a unique RGB color code for a given track id (tag).
 
     The color code is generated in HSV color space by moving along the
     hue angle and gradually changing the saturation.
@@ -30,7 +34,9 @@ def create_unique_color_float(tag, hue_step=0.41):
 
 
 def create_unique_color_uchar(tag, hue_step=0.41):
-    """Create a unique RGB color code for a given track id (tag).
+    """
+    与上一个函数类似，不同之处在于返回的RGB颜色代码值在范围[0, 255]之间
+    Create a unique RGB color code for a given track id (tag).
 
     The color code is generated in HSV color space by moving along the
     hue angle and gradually changing the saturation.
@@ -55,6 +61,7 @@ def create_unique_color_uchar(tag, hue_step=0.41):
 
 class NoVisualization(object):
     """
+    一个虚拟的可视化对象，用于在给定的序列中循环遍历所有帧以更新跟踪器，而不执行任何可视化
     A dummy visualization object that loops through all frames in a given
     sequence to update the tracker without performing any visualization.
     """
@@ -94,6 +101,7 @@ class NoVisualization(object):
 
 class Visualization(object):
     """
+    用于在OpenCV图像查看器中显示跟踪输出
     This class shows tracking output in an OpenCV image viewer.
     """
 
