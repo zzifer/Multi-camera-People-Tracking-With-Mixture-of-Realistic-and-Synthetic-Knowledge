@@ -3,7 +3,10 @@ import numpy as np
 
 
 def _pdist(a, b):
-    """Compute pair-wise squared distance between points in `a` and `b`.
+    """计算两个矩阵a和b中点之间的平方距离。
+    其中，a和b通常是包含样本的矩阵，a的行数是N，b的行数是L，两者的列数相同（维度为M）。
+    函数返回一个大小为(N, L)的矩阵，其中每个元素(i, j)包含a[i]和b[j]之间的平方距离
+    Compute pair-wise squared distance between points in `a` and `b`.
 
     Parameters
     ----------
@@ -29,7 +32,10 @@ def _pdist(a, b):
 
 
 def _cosine_distance(a, b, data_is_normalized=False):
-    """Compute pair-wise cosine distance between points in `a` and `b`.
+    """计算两个矩阵a和b中点之间的余弦距离。如果data_is_normalized为False，
+    函数会先将a和b中的向量归一化，然后计算余弦距离。余弦距离的范围是[0, 2]，
+    函数返回一个大小为(N, L)的矩阵，其中每个元素(i, j)包含a[i]和b[j]之间的余弦距离
+    Compute pair-wise cosine distance between points in `a` and `b`.
 
     Parameters
     ----------
@@ -55,7 +61,9 @@ def _cosine_distance(a, b, data_is_normalized=False):
 
 
 def _nn_euclidean_distance(x, y):
-    """ Helper function for nearest neighbor distance metric (Euclidean).
+    """ 计算最近邻距离度量（欧氏距离），即对于y中的每个点，找到与x中的点的最小欧氏距离。
+    函数返回一个大小为M的向量，其中每个元素包含y[i]与x中最接近的点之间的最小欧氏距离
+    Helper function for nearest neighbor distance metric (Euclidean).
 
     Parameters
     ----------
@@ -78,7 +86,9 @@ def _nn_euclidean_distance(x, y):
 
 
 def _nn_cosine_distance(x, y):
-    """ Helper function for nearest neighbor distance metric (cosine).
+    """计算最近邻距离度量（余弦距离），即对于y中的每个点，找到与x中的点的最小余弦距离。
+    函数返回一个大小为M的向量，其中每个元素包含y[i]与x中最接近的点之间的最小余弦距离
+    Helper function for nearest neighbor distance metric (cosine).
 
     Parameters
     ----------
@@ -99,7 +109,8 @@ def _nn_cosine_distance(x, y):
 
 
 class NearestNeighborDistanceMetric(object):
-    """
+    """据所选的距离度量（可以是欧氏距离或余弦距离）初始化。
+    它还接受一个匹配阈值matching_threshold和一个可选的budget参数，用于控制每个类别的最大样本数量
     A nearest neighbor distance metric that, for each target, returns
     the closest distance to any sample that has been observed so far.
 
@@ -137,7 +148,9 @@ class NearestNeighborDistanceMetric(object):
         self.samples = {}
 
     def partial_fit(self, features, targets, active_targets):
-        """Update the distance metric with new data.
+        """用于更新距离度量器的样本数据。它接受特征features、关联的目标targets和当前存在于场景中的目标active_targets。
+        它将样本数据添加到相应的目标类别中，如果设置了budget，则会保持每个类别的样本数量不超过budget
+        Update the distance metric with new data.
 
         Parameters
         ----------
@@ -156,7 +169,9 @@ class NearestNeighborDistanceMetric(object):
         self.samples = {k: self.samples[k] for k in active_targets}
 
     def distance(self, features, targets):
-        """Compute distance between features and targets.
+        """于计算特征features与目标targets之间的距离。它返回一个大小为(len(targets), len(features))的矩阵，
+        其中每个元素(i, j)包含targets[i]和features[j]之间的最近距离
+        Compute distance between features and targets.
 
         Parameters
         ----------
