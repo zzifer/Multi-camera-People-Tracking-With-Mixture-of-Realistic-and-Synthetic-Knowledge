@@ -5,6 +5,10 @@ from opts import opt
 
 class TrackState:
     """
+    枚举类型，表示单目标跟踪的状态
+    Tentative（待确认）：新创建的跟踪目标初始状态，需要收集足够的证据后才能确认
+    Confirmed（已确认）：跟踪目标已确认存在
+    Deleted（已删除）：跟踪目标不再存在，标记为删除，将被从活动跟踪集合中移除
     Enumeration type for the single target track state. Newly created tracks are
     classified as `tentative` until enough evidence has been collected. Then,
     the track state is changed to `confirmed`. Tracks that are no longer alive
@@ -20,6 +24,7 @@ class TrackState:
 
 class Track:
     """
+    表示一个单目标跟踪，包含了跟踪目标的状态信息和相关属性
     A single target track with state space `(x, y, a, h)` and associated
     velocities, where `(x, y)` is the center of the bounding box, `a` is the
     aspect ratio and `h` is the height.
@@ -102,7 +107,8 @@ class Track:
 
 
     def to_tlwh(self):
-        """Get current position in bounding box format `(top left x, top left y,
+        """获取当前位置信息，并以边界框格式返回 (top left x, top left y, width, height)
+        Get current position in bounding box format `(top left x, top left y,
         width, height)`.
 
         Returns
@@ -117,7 +123,8 @@ class Track:
         return ret
 
     def to_tlbr(self):
-        """Get current position in bounding box format `(min x, miny, max x,
+        """获取当前位置信息，并以边界框格式返回 (min x, min y, max x, max y)
+        Get current position in bounding box format `(min x, miny, max x,
         max y)`.
 
         Returns
@@ -131,7 +138,8 @@ class Track:
         return ret
 
     def predict(self):
-        """Propagate the state distribution to the current time step using a
+        """使用卡尔曼滤波器进行状态预测
+        Propagate the state distribution to the current time step using a
         Kalman filter prediction step.
         """
         self.mean, self.covariance = self.kf.predict(self.mean, self.covariance)
@@ -141,6 +149,7 @@ class Track:
     @staticmethod
     def get_matrix(dict_frame_matrix, frame):
         eye = np.eye(3)
+        # 从 dict_frame_matrix 字典中获取与给定 frame 对应的矩阵
         matrix = dict_frame_matrix[frame]
         dist = np.linalg.norm(eye - matrix)
         if dist < 100:
@@ -149,7 +158,8 @@ class Track:
             return eye
 
     def update(self, detection):
-        """Perform Kalman filter measurement update step and update the feature
+        """执行卡尔曼滤波器的测量更新步骤，并更新特征缓存
+        Perform Kalman filter measurement update step and update the feature
         cache.
 
         Parameters
@@ -184,7 +194,8 @@ class Track:
             self.state = TrackState.Confirmed
 
     def mark_missed(self):
-        """Mark this track as missed (no association at the current time step).
+        """将该跟踪目标标记为未匹配（在当前时间步没有关联的检测）
+        Mark this track as missed (no association at the current time step).
         """
         if self.state == TrackState.Tentative:
             self.state = TrackState.Deleted
@@ -205,7 +216,8 @@ class Track:
         return self.state == TrackState.Deleted
 
     def is_still(self, iou_thresh=0.95):
-        """Return True if the track is not moving"""
+        """返回True，如果该跟踪目标不再移动，基于与前一帧的交叠比例来判断
+        Return True if the track is not moving"""
         if len(self.storage) < 2:
             return False
         det1 = self.storage[-1]
