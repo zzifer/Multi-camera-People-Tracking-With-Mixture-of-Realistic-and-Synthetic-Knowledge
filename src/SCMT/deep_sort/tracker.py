@@ -60,7 +60,9 @@ class Tracker:
             self.high_score = 0.5
 
     def predict(self):
-        """Propagate track state distributions one time step forward.
+        """用于将跟踪目标的状态分布向前传播一次步
+        每个跟踪目标的状态都会经过预测步骤
+        Propagate track state distributions one time step forward.
 
         This function should be called once every time step, before `update`.
         """
@@ -68,7 +70,11 @@ class Tracker:
             track.predict()
 
     def update(self, detections):
-        """Perform measurement update and track management.
+        """用于执行测量更新和跟踪管理
+        接受一个包含当前时间步检测的列表作为参数，然后执行跟踪目标的测量更新
+        还会处理跟踪目标的状态，标记丢失的目标，并初始化新的跟踪目标
+        此外，还包含一些用于更新距离度量和处理不同阈值的逻辑
+        Perform measurement update and track management.
 
         Parameters
         ----------
@@ -111,6 +117,7 @@ class Tracker:
             np.asarray(features), np.asarray(targets), active_targets)
 
     def postprocess(self):
+        # 用于对跟踪目标进行后处理，包括排序、删除不必要的目标、合并相似的目标、插值、高斯平滑等操作
         self.tracks_all += [t for t in self.tracks if t.is_confirmed()]
         for track in self.tracks_all:
             track.storage.sort(key=lambda d : d.frame_idx)
@@ -132,7 +139,8 @@ class Tracker:
         self._update_tracklet_info()
         
     def _match(self, detections):
-
+        # 用于执行目标关联操作，将检测关联到现有的跟踪目标上
+        # 这包括多步骤的匹配过程，首先使用外观特征（Appearance Features）进行匹配，然后使用IOU（Intersection over Union）进行匹配
         def gated_metric(tracks, dets, track_indices, detection_indices, enable_motion_shape=False, color_gate=True):
             features = np.array([dets[i].feature for i in detection_indices])
             targets = np.array([tracks[i].track_id for i in track_indices])
@@ -199,12 +207,14 @@ class Tracker:
         return matches, unmatched_tracks, unmatched_detections
 
     def _initiate_track(self, detection):
+        # 用于初始化一个新的跟踪目标，将其添加到跟踪列表中
         self.tracks.append(Track(
             detection.to_xyah(), self._next_id, self.n_init, self.max_age,
             detection))
         self._next_id += 1
 
     def _check_still(self):
+        # 包含一些特定于相机名称的逻辑，用于检测静止的目标并进行处理
         if self.cam_name == 'c041':
             still_tracks_count = 0
             for track in self.tracks:
@@ -221,11 +231,13 @@ class Tracker:
                             track.mean[:4] = track.storage[-2].to_xyah()
 
     def _update_tracklet_info(self):
+        # 用于更新跟踪目标的信息，如起始帧和结束帧
         for track in self.tracks_all:
             track.start_frame = track.storage[0].frame_idx
             track.end_frame = track.storage[-1].frame_idx
 
     def _merge_overlap(self):
+        # 用于合并重叠的目标，其中目标的重叠程度通过IOU进行度量
         for t1 in self.tracks_all:
             t1_len = len(t1.storage)
             if t1.delete or t1_len < 3:
@@ -274,6 +286,7 @@ class Tracker:
                     break
 
     def _merge_similar(self):
+        # 用于合并相似的目标，包括不同相机名称的特定逻辑
         if self.cam_name in ['c041']:
             mid_end_track = []
             mid_start_track = []
@@ -446,6 +459,7 @@ class Tracker:
                         track1.storage += mid_start_track[idx].storage
 
     def _delete_tracklets(self, delete_less_than = 5, tracklet_trust_threshold = 0.5):
+        # 用于删除不需要的短暂目标或不可信的目标
         for track in self.tracks_all:
             length = len(track.storage)
             if length <= delete_less_than:
@@ -480,7 +494,8 @@ class Tracker:
                     track.delete = True
     
     def _linear_interpolation(self, interval=20):
-        '''线性插值'''
+        '''执行线性插值操作，以平滑目标的位置信息
+        线性插值'''
         for track in self.tracks_all:
             f_pre = track.storage[0].frame_idx            
             tlwh_pre = track.storage[0].tlwh
@@ -517,6 +532,7 @@ class Tracker:
             track.storage.sort(key=lambda d : d.frame_idx)
 
     def _gaussian_smooth(self, tau=10):
+        # 执行高斯平滑操作，以平滑目标的位置信息
         for track in self.tracks_all:
             len_scale = np.clip(tau * np.log(tau ** 3 / len(track.storage)), tau ** -1, tau ** 2)
             gpr = GPR(RBF(len_scale, 'fixed'))
@@ -541,6 +557,7 @@ class Tracker:
                 track.storage[i].tlwh = np.array([xx[i], yy[i], ww[i], hh[i]])
 
     def _det_iou(self, det1, det2):
+        # 用于计算两个检测框的IOU（Intersection over Union）
         ltx1 = det1.tlwh[0]
         lty1 = det1.tlwh[1]
         rdx1 = det1.tlwh[0] + det1.tlwh[2]
@@ -565,6 +582,7 @@ class Tracker:
 
     # not used
     def _motion_shape_distance(self, track_box, det_box):
+        # 未使用的函数，用于计算运动和形状之间的距离
         _weight_motion = -0.5
         _weight_shape = -1.5
         if track_box[2] <= 0 or track_box[3] <= 0:
