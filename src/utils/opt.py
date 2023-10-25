@@ -10,6 +10,7 @@ import json
 
 def load_yaml(path):
     with open(path, "rt") as f:
+        # yaml.safe_load用于将文件内容解析成Python字典
         return yaml.safe_load(f)
 
 
@@ -45,6 +46,10 @@ class Config(dict):
         return str(json.dumps(dict(self), sort_keys=False, indent=4))
 
 
+"""
+接受一个主字典 mapping 和多个要合并的字典 updating_mappings，
+然后递归地将updating_mappings合并到mapping中。这个函数通过检查键是否存在以及值的类型，实现了深度合并的功能
+"""
 def deep_update(mapping: dict, *updating_mappings: dict()) -> dict():
     updated_mapping = mapping.copy()
     for updating_mapping in updating_mappings:
@@ -62,6 +67,10 @@ def deep_update(mapping: dict, *updating_mappings: dict()) -> dict():
 
 
 class Opts(ArgumentParser):
+    """
+    构造函数接受一个可选的配置参数 cfg，该参数可以是字符串或字典。
+    如果是字典，则直接使用该字典作为配置；如果是字符串，则根据路径加载相应的YAML配置文件
+    """
     def __init__(self, cfg: Optional[Union[str, dict]] = None):
         super(Opts, self).__init__(formatter_class=RawDescriptionHelpFormatter)
         if isinstance(cfg, dict):
