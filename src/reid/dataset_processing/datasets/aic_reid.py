@@ -8,6 +8,7 @@ import torchvision.transforms as T
 import os
 
 
+# 加载和处理AIC23数据集的图像数据
 class AIC_reid(BaseImageDataset):
     def __init__(
         self, root="./", label_file=None, verbose=True, relabel=False, **kwargs
@@ -21,6 +22,7 @@ class AIC_reid(BaseImageDataset):
         self.dataset = self._process_dir(relabel=relabel)
         return
 
+    # 处理AIC23数据集的图像和标签
     def _process_dir(self, relabel):
         persons = dict()
         dataset = []
@@ -52,7 +54,7 @@ class AIC_reid(BaseImageDataset):
 
         return _dataset
 
-
+# 提取AIC23数据集的特征信息
 class AIC_Feature_Extractor(BaseException):
     def __init__(
         self, root="./", label_folder=None, verbose=True, relabel=False, **kwargs
