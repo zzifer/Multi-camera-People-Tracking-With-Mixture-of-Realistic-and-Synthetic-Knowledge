@@ -37,7 +37,9 @@ except ImportError:
 
 class Detect(nn.Module):
     # YOLOv5 Detect head for detection models
+    # 用于存储计算的步幅（strides）
     stride = None  # strides computed during build
+    # 表示是否启用动态网格重建
     dynamic = False  # force grid reconstruction
     export = False  # export mode
 
@@ -49,6 +51,7 @@ class Detect(nn.Module):
         self.na = len(anchors[0]) // 2  # number of anchors
         self.grid = [torch.empty(0) for _ in range(self.nl)]  # init grid
         self.anchor_grid = [torch.empty(0) for _ in range(self.nl)]  # init anchor grid
+        # 注册一个名为 anchors 的缓冲区（buffer）属性。将传入的锚点框信息 anchors 转换为 PyTorch 张量，并存储在 anchors 缓冲区中
         self.register_buffer('anchors', torch.tensor(anchors).float().view(self.nl, -1, 2))  # shape(nl,na,2)
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
         self.inplace = inplace  # use inplace ops (e.g. slice assignment)
@@ -58,10 +61,13 @@ class Detect(nn.Module):
         for i in range(self.nl):
             x[i] = self.m[i](x[i])  # conv
             bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+            # 对卷积输出进行重排列操作，以将输出格式变换为 [batch_size, num_anchors, num_outputs, grid_height, grid_width, num_features]
             x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
 
             if not self.training:  # inference
+                # 检查是否需要动态网格重建或者网格尺寸发生变化
                 if self.dynamic or self.grid[i].shape[2:4] != x[i].shape[2:4]:
+                    # 调用 _make_grid 方法，生成网格和锚点网格信息
                     self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
 
                 if isinstance(self, Segment):  # (boxes + masks)
