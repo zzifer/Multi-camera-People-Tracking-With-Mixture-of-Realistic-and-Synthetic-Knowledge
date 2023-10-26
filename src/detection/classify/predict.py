@@ -73,11 +73,16 @@ def run(
         vid_stride=1,  # video frame-rate stride
 ):
     source = str(source)
+    # 根据参数 nosave 和输入 source 是否以 '.txt' 结尾，判断是否保存推理图像。
+    # 如果 nosave 为 True 或输入 source 以 '.txt' 结尾，将不保存图像
     save_img = not nosave and not source.endswith('.txt')  # save inference images
+    # 检查输入 source 是否为文件
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
     is_url = source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://'))
     webcam = source.isnumeric() or source.endswith('.streams') or (is_url and not is_file)
+    # 检查输入 source 是否以 'screen' 开头，以判断是否是屏幕截图输入
     screenshot = source.lower().startswith('screen')
+    # 如果输入 source 既是URL又是文件，将调用 check_file(source) 下载文件
     if is_url and is_file:
         source = check_file(source)  # download
 
@@ -87,12 +92,14 @@ def run(
 
     # Load model
     device = select_device(device)
+    # 加载YOLOv5模型，DetectMultiBackend 是YOLOv5的模型类，加载权重文件、选择设备和设置其他参数
     model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
     # Dataloader
     bs = 1  # batch_size
+    # 根据输入 source 和其他参数选择合适的数据加载器
     if webcam:
         view_img = check_imshow(warn=True)
         dataset = LoadStreams(source, img_size=imgsz, transforms=classify_transforms(imgsz[0]), vid_stride=vid_stride)
@@ -104,6 +111,7 @@ def run(
     vid_path, vid_writer = [None] * bs, [None] * bs
 
     # Run inference
+    # 进行模型预热（warmup），此时输入假数据用于模型初始化
     model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
     seen, windows, dt = 0, [], (Profile(), Profile(), Profile())
     for path, im, im0s, vid_cap, s in dataset:
