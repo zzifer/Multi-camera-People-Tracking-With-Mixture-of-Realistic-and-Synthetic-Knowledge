@@ -10,9 +10,8 @@ from multiprocessing import Pool
 from sys import stdout
 import numpy as np
 
-# 加载配置文件，将配置信息存储在cfg变量中
+
 cfg = util.load_defaults()
-# 从配置文件中获取数据集的根目录路径
 ROOT_DATA_DIR = cfg["DATASETS"]["ROOT_DIR"]
 print(ROOT_DATA_DIR)
 
