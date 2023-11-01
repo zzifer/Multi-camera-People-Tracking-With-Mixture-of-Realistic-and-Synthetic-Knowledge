@@ -33,6 +33,7 @@ def inference(cfg):
     val_loader = make_inference_data_loader(cfg)
 
     print(checkpoint_path)
+    # 加载预训练模型和训练好的权重
     vehicle_reid = Vehicle_Reid.load_from_checkpoint(
         checkpoint_path,
         model=model,
@@ -61,6 +62,7 @@ def inference(cfg):
             features.update(prediction)
 
         with open(f"{OUTPUT_FEAT_DIR}/{scene_cam}_feature.pkl", "wb") as fid:
+            # 使用pickle将features字典中的特征数据保存到文件中，以二进制格式进行序列化
             pickle.dump(features, fid)
         
         print("[Extract done]", scene_cam)
