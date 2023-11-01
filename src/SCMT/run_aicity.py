@@ -54,8 +54,10 @@ if __name__ == '__main__':
     for i, seq in enumerate(opt.sequences, start=1):
         print(seq)
         seqs.append(seq)
-    
+
+    # 创建一个具有 10 个进程的进程池，用于并行处理视频序列
     pool = Pool(processes=10)
+    # 使用进程池并行处理视频序列
     pool.map(process, seqs)
     pool.close()
 
