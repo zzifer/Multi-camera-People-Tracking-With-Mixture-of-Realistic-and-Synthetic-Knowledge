@@ -22,21 +22,22 @@ ROLES = ["train", "validation", "test"]
 IMAGE_FORMAT = ".jpg"  # ".png"
 
 
-# 将视频文件转换成图像序列
-# 函数接受一个包含四个元素的参数parameter_set，依次表示角色、场景、摄像机和摄像机目录
+# 用于将视频文件分解成图像帧
 def video2image(parameter_set):
     role, scenario, camera, camera_dir = parameter_set
     fprint(f"[Processing] {role} {scenario} {camera}{endl}")
-    # 定义了保存图像序列的目录，这个目录是根据摄像机目录构建的
+    # 构建存储图像帧的目录路径，位于摄像头目录下的img1子目录
     imgs_dir = f"{camera_dir}/img1"
     if not os.path.exists(imgs_dir):
         os.makedirs(imgs_dir)
     # 通过cv2.VideoCapture打开视频文件，然后使用一个循环来逐帧读取视频帧，并将每一帧保存为图像文件
     cap = cv2.VideoCapture(f"{camera_dir}/video.mp4")
     current_frame = 1
+    # 使用OpenCV读取视频的下一帧图像，ret表示读取是否成功，frame包含图像数据
     ret, frame = cap.read()
     while ret:
         frame_file_name = f"{str(current_frame).zfill(6)}{IMAGE_FORMAT}"
+        # 将当前帧的图像数据保存为图像文件
         cv2.imwrite(f"{imgs_dir}/{frame_file_name}", frame)
         ret, frame = cap.read()
         current_frame += 1
@@ -48,6 +49,7 @@ def main():
     parameter_sets = []
     for each_role in ROLES:
         role_dir = f"{ROOT_DATA_DIR}/{each_role}"
+        # 获取当前角色目录下的所有场景
         scenarios = os.listdir(role_dir)
         for each_scenario in scenarios:
             scene = each_scenario
