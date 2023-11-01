@@ -14,7 +14,7 @@ print(ROOT_DIR)
 cam_info = ""
 # 设置帧率为30帧/秒
 frame_rate=30
-# 初始化length变量，用于存储每个摄像头的帧数
+# 初始化length变量，用于存储每个摄像头的帧数？
 length = 0
 # 图像的宽度和高度
 width=1920
@@ -36,7 +36,7 @@ for scene in os.listdir(ROOT_DIR):
         if len(cam.split('.')) == 2: continue
         # 构建摄像头目录的完整路径
         cam_dir = os.path.join(ROOT_DIR, scene, cam)
-        # 获取图像文件夹中的图像文件数量，然后更新length变量
+        # 获取摄像头目录下img1子目录中的图像帧的数量
         length = len(os.listdir(cam_dir +'/img1'))
         infor = f"[Sequence]\nname={cam}\nimgDir=img1\nframeRate={frame_rate}\nSeqLength={length}\nimWidth={width}\nimHeight={height}\nimgExt={ext}\n"
 
