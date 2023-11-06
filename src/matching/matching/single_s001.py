@@ -18,10 +18,14 @@ _init_frames = {
     'c007': 32904
 }
 
+
 def check_intersect_time(trackA, trackB):
+    # 将trackA的帧号转换为集合，这将去除重复的帧号，因为集合中不允许重复元素
     setA = set(trackA.frames)
     setB = set(trackB.frames)
-    
+
+    # setA.intersection(setB)用于计算两个集合的交集，即它找出两个轨迹中共同的frames
+    # 如果交集中的frames数量大于3，返回 True
     return len(setA.intersection(setB)) > 3
 
 
@@ -232,6 +236,7 @@ class Single_camera_matching:
         
         
         return cluster_group, uncertain
+        
     def check_intersec_time(self, trackId, track_list):
         _count = 0
         for track in track_list:
