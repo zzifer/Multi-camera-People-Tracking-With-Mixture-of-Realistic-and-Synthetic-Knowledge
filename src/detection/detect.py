@@ -56,29 +56,29 @@ def run(
         source=ROOT / 'data/images',  # file/dir/URL/glob/screen/0(webcam)
         data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)
-        conf_thres=0.25,  # confidence threshold
-        iou_thres=0.45,  # NMS IOU threshold
+        conf_thres=0.25,  # confidence threshold 置信度阈值
+        iou_thres=0.45,  # NMS IOU threshold 非最大抑制（NMS）中的交并比（IoU）阈值，用于处理重叠的检测框，默认值为0.45
         max_det=1000,  # maximum detections per image
         device='',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
-        view_img=False,  # show results
+        view_img=False,  # show results 是否在屏幕上实时显示检测结果，默认不显示
         save_txt=False,  # save results to *.txt
         save_conf=False,  # save confidences in --save-txt labels
-        save_crop=False,  # save cropped prediction boxes
-        nosave=False,  # do not save images/videos
-        classes=None,  # filter by class: --class 0, or --class 0 2 3
-        agnostic_nms=False,  # class-agnostic NMS
-        augment=False,  # augmented inference
-        visualize=False,  # visualize features
+        save_crop=False,  # save cropped prediction boxes 是否保存被检测对象的裁剪图像，默认不保存
+        nosave=False,  # do not save images/videos 
+        classes=None,  # filter by class: --class 0, or --class 0 2 3 指定要检测的类别，默认为None，表示检测所有类别
+        agnostic_nms=False,  # class-agnostic NMS 是否使用类别不可知的非最大抑制，默认不使用
+        augment=False,  # augmented inference 是否在推理时使用增强技术，默认不使用
+        visualize=False,  # visualize features 是否可视化特征图，默认不可视化
         update=False,  # update all models
         project=ROOT / 'runs/detect',  # save results to project/name
         name='exp',  # save results to project/name
         exist_ok=False,  # existing project/name ok, do not increment
-        line_thickness=3,  # bounding box thickness (pixels)
-        hide_labels=False,  # hide labels
-        hide_conf=False,  # hide confidences
-        half=False,  # use FP16 half-precision inference
-        dnn=False,  # use OpenCV DNN for ONNX inference
-        vid_stride=1,  # video frame-rate stride
+        line_thickness=3,  # bounding box thickness (pixels) 参数设置绘制边界框时的线条粗细，默认为3像素
+        hide_labels=False,  # hide labels 是否隐藏检测框上的标签，默认显示标签
+        hide_conf=False,  # hide confidences 是否隐藏置信度信息，默认显示
+        half=False,  # use FP16 half-precision inference 是否使用FP16半精度进行推理，默认不使用
+        dnn=False,  # use OpenCV DNN for ONNX inference 是否使用OpenCV的DNN模块来进行ONNX模型的推理，默认不使用
+        vid_stride=1,  # video frame-rate stride 设置视频帧处理的步长，默认为1，即处理每一帧
 ):
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
@@ -113,11 +113,14 @@ def run(
 
     # Run inference
     model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
+    # 初始化一些变量：seen用于跟踪处理过的图像数量，windows用于存储窗口对象（Linux系统中用于显示图像）
+    # dt是一个包含三个Profile实例的元组，用于测量不同处理阶段的时间
     seen, windows, dt = 0, [], (Profile(), Profile(), Profile())
     for path, im, im0s, vid_cap, s in dataset:
         with dt[0]:
             im = torch.from_numpy(im).to(model.device)
             im = im.half() if model.fp16 else im.float()  # uint8 to fp16/32
+            # 将图像像素值从0-255标准化到0.0-1.0之间
             im /= 255  # 0 - 255 to 0.0 - 1.0
             if len(im.shape) == 3:
                 im = im[None]  # expand for batch dim
@@ -125,6 +128,7 @@ def run(
         # Inference
         with dt[1]:
             visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
+            # 对模型的预测应用非最大抑制，以去除重叠的检测框并过滤出最佳预测结果
             pred = model(im, augment=augment, visualize=visualize)
 
         # NMS
@@ -141,41 +145,55 @@ def run(
                 p, im0, frame = path[i], im0s[i].copy(), dataset.count
                 s += f'{i}: '
             else:
+                # 对于其他输入类型，设置路径、原始图像和帧计数器
                 p, im0, frame = path, im0s.copy(), getattr(dataset, 'frame', 0)
 
             p = Path(p)  # to Path
             save_path = str(save_dir / p.name)  # im.jpg
             txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # im.txt
             s += '%gx%g ' % im.shape[2:]  # print string
+            # 如果需要保存裁剪的图像，则复制原始图像
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+            # 如果需要保存裁剪的图像，则复制原始图像
             imc = im0.copy() if save_crop else im0  # for save_crop
+            # 创建一个Annotator对象用于在图像上绘制标注
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
             if len(det):
                 # Rescale boxes from img_size to im0 size
+                # 将检测框从推理图像大小缩放回原始图像大小
                 det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
 
                 # Print results
+                # 遍历每个独特的检测类别
                 for c in det[:, 5].unique():
+                    # 计算每个类别的检测数量
                     n = (det[:, 5] == c).sum()  # detections per class
+                    # 更新日志字符串，包括每个类别的检测数量和名称
                     s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
                     if save_txt:  # Write to file
+                        # 将检测框的坐标从xyxy（左上角和右下角）格式转换为xywh（中心点和宽高）格式，并进行归一化
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                        # 类别ID、归一化的xywh坐标和（如果save_conf为真）置信度的元组
                         line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
                         with open(f'{txt_path}.txt', 'a') as f:
                             f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
+                    # 检查是否需要在图像上绘制边界框
                     if save_img or save_crop or view_img:  # Add bbox to image
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
+                    # 使用Annotator对象的box_label方法在图像上绘制边界框和标签。边界框的颜色由类别ID决定
                     if save_crop:
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Stream results
+            # annotator.result()调用获取经过注释（例如，绘制了检测框和标签）的图像
             im0 = annotator.result()
+            # 这个条件判断是否需要在屏幕上显示图像
             if view_img:
                 if platform.system() == 'Linux' and p not in windows:
                     windows.append(p)
@@ -188,6 +206,7 @@ def run(
             if save_img:
                 if dataset.mode == 'image':
                     cv2.imwrite(save_path, im0)
+                # 如果处理的是视频或流媒体，检查是否需要开始写入新视频
                 else:  # 'video' or 'stream'
                     if vid_path[i] != save_path:  # new video
                         vid_path[i] = save_path
